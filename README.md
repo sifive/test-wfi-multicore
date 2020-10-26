@@ -7,16 +7,14 @@ conductor to test Hart_0 to Hart_(Last-1).
 
 Note: The test requires that a Core-Local Interruptor (CLINT) exists in the design.
 
-Test Result
-
+## Test Result
 The test result is 0 for success and non-zero for fail.  For test failures, the 
 possible results are:
  1 if only the TEST_MIE_DISABLED failed
  2 if only the TEST_MIE_ENABLED failed
  3 if both tests failed
 
-Test Deployment
-
+## Test Deployment
 In a RTL environment, the files can be incorporated into your tarball workspace and 
 executed like a standard example delivered with the tarball.  Follow these steps:
 1) Copy all files into a new folder called sifive_coreip/freedom-e-sdk/software/test-wfi-multicore

@@ -21,8 +21,8 @@ typedef enum {TEST_MIE_DISABLED=0, TEST_MIE_ENABLED} test_t;
 typedef enum {FALSE=0, TRUE} bool_t;
 
 /* defines */
-#define NUM_TESTS 	2   /* two tests: TEST_MIE_DISABLED and TEST_MIE_ENABLED */
-#define NUM_WFI 	5   /* each test puts the other harts through 5 WFI wakeups */
+#define NUM_TESTS   2   /* two tests: TEST_MIE_DISABLED and TEST_MIE_ENABLED */
+#define NUM_WFI     5   /* each test puts the other harts through 5 WFI wakeups */
 
 /* function prototypes */
 int hart_checkin_count (void);
@@ -61,36 +61,36 @@ volatile int wfi_count[__METAL_DT_MAX_HARTS];       /* each hart only writes its
  **********************************************************************/
 int main() {
 
-	/* this is multicore test... each hart has a unique hartid */
-	int hartid=metal_cpu_get_current_hartid();
+    /* this is multicore test... each hart has a unique hartid */
+    int hartid=metal_cpu_get_current_hartid();
 
-	/* initialize the test */
-	test_init(hartid);
+    /* initialize the test */
+    test_init(hartid);
 
-	/* make sure all harts are synchronized before test starts */
-	synchronize_harts(hartid);
+    /* make sure all harts are synchronized before test starts */
+    synchronize_harts(hartid);
 
-	/* run the test with MIE disabled */
-	test_wfi (hartid, TEST_MIE_DISABLED);
+    /* run the test with MIE disabled */
+    test_wfi (hartid, TEST_MIE_DISABLED);
 
-	/* make sure all harts are synchronized before next test starts */
-	synchronize_harts(hartid);
+    /* make sure all harts are synchronized before next test starts */
+    synchronize_harts(hartid);
 
-	/* run the test with MIE enabled */
-	test_wfi (hartid, TEST_MIE_ENABLED);
+    /* run the test with MIE enabled */
+    test_wfi (hartid, TEST_MIE_ENABLED);
 
-	/* make sure testing is completed across all harts before returning results */
-	synchronize_harts(hartid);
+    /* make sure testing is completed across all harts before returning results */
+    synchronize_harts(hartid);
 
     /* we only want one return() to be executed for simulation purposes */
-	/* use a while() here in case a debugger gets attached */
-	while (hartid != 0) {
-		/* park all harts but hart_0 at WFI */
-		__asm__ volatile ("wfi");
-	}
+    /* use a while() here in case a debugger gets attached */
+    while (hartid != 0) {
+        /* park all harts but hart_0 at WFI */
+        __asm__ volatile ("wfi");
+    }
 
-	/* hart_0 returns the composite test result */
-	return (global_error[0]+global_error[1]);
+    /* hart_0 returns the composite test result */
+    return (global_error[0]+global_error[1]);
 }
 
 
@@ -114,28 +114,28 @@ int main() {
  **********************************************************************/
 void test_wfi (int hartid, test_t test) {
 
-	error_t error = ERR_NONE;
+    error_t error = ERR_NONE;
 
-	if (test == TEST_MIE_DISABLED) {
-		/* Write mstatus.mie = 0 to disable all machine interrupts */
-		interrupt_global_disable();
-	}
-	else {
-		/* default to running TEST_MIE_ENABLED */
-		/* Write mstatus.mie = 1 to enable all machine interrupts */
-		interrupt_global_enable();
-	}
-
-    /* we run two sub-tests */
-	/* SUBTEST 1: hart_0 is the test giver, all other harts are tested */
-    if (hartid == 0) {
-    	/* run test driver for hart_0 */
-    	error = test_driver_hart_0(test);
-    	global_error[test] = error;
+    if (test == TEST_MIE_DISABLED) {
+        /* Write mstatus.mie = 0 to disable all machine interrupts */
+        interrupt_global_disable();
     }
     else {
-    	/* all other harts take the test */
-    	test_taker(hartid, test);
+        /* default to running TEST_MIE_ENABLED */
+        /* Write mstatus.mie = 1 to enable all machine interrupts */
+        interrupt_global_enable();
+    }
+
+    /* we run two sub-tests */
+    /* SUBTEST 1: hart_0 is the test giver, all other harts are tested */
+    if (hartid == 0) {
+        /* run test driver for hart_0 */
+        error = test_driver_hart_0(test);
+        global_error[test] = error;
+    }
+    else {
+        /* all other harts take the test */
+        test_taker(hartid, test);
     }
 
     /* sync the harts... */
@@ -143,16 +143,16 @@ void test_wfi (int hartid, test_t test) {
     /* hart_last is flipping from a taker to a giver */
     synchronize_harts(hartid);
 
-	/* SUBTEST 2: hart_last is the test giver, all other harts are tested */
+    /* SUBTEST 2: hart_last is the test giver, all other harts are tested */
     if (error == ERR_NONE) {
-    	/* repeat the same test with the last hart as the test driver */
+        /* repeat the same test with the last hart as the test driver */
         if (hartid == (__METAL_DT_MAX_HARTS-1)) {
-        	error = test_driver_hart_last(test);
-        	global_error[test] = error;
+            error = test_driver_hart_last(test);
+            global_error[test] = error;
         }
         else {
-        	/* all other harts take the test */
-        	test_taker(hartid, test);
+            /* all other harts take the test */
+            test_taker(hartid, test);
         }
     }
 
@@ -174,47 +174,47 @@ void test_wfi (int hartid, test_t test) {
  **********************************************************************/
 error_t test_driver_hart_0 (test_t test) {
 
-	int i, j;
-	error_t error = ERR_NONE;
+    int i, j;
+    error_t error = ERR_NONE;
 
-	/* make doubly sure other harts are already at WFI */
-	wait(500);   	
+    /* make doubly sure other harts are already at WFI */
+    wait(500);   	
 
-	/* clear the synchronize flag */
-	harts_go = FALSE;
+    /* clear the synchronize flag */
+    harts_go = FALSE;
 
-	/* send each hart a software interrupt NUM_WFI times */
-	for (i=0; i<NUM_WFI; i++) {
-		for (j=1; j<__METAL_DT_MAX_HARTS; j++) {
-			set_software_interrupt(j);
-		}
-		/* give time to the test takers to respond and return to WFI */
-		wait(500);
-	}
+    /* send each hart a software interrupt NUM_WFI times */
+    for (i=0; i<NUM_WFI; i++) {
+        for (j=1; j<__METAL_DT_MAX_HARTS; j++) {
+            set_software_interrupt(j);
+        }
+        /* give time to the test takers to respond and return to WFI */
+        wait(500);
+    }
 
-	if (test == TEST_MIE_DISABLED) 	{
-		/* check that all harts ONLY woke up from WFI... NUM_WFI times */
-		for (j=1; j<__METAL_DT_MAX_HARTS; j++) {
-			if ( (wfi_count[j] != NUM_WFI) && (msi_count[j] == 0) ) {
-				/* test failed */
-				error = ERR_INTERRUPTS_DISABLED;
-				break;
-			}  
-		}  
-	}  
-	else {
-		/* this is TEST_MIE_ENABLED test */
-		/* check all harts woke up from WFI and serviced their software handler */
-		for (j=1; j<__METAL_DT_MAX_HARTS; j++) {
-			if ( (wfi_count[j] != NUM_WFI) || (msi_count[j] != NUM_WFI) ) {
-				/* test failed */
-				error = ERR_INTERRUPTS_ENABLED;
-				break;
-			}  
-		}  
-	}  
+    if (test == TEST_MIE_DISABLED) 	{
+        /* check that all harts ONLY woke up from WFI... NUM_WFI times */
+        for (j=1; j<__METAL_DT_MAX_HARTS; j++) {
+            if ( (wfi_count[j] != NUM_WFI) && (msi_count[j] == 0) ) {
+                /* test failed */
+                error = ERR_INTERRUPTS_DISABLED;
+                break;
+            }  
+        }  
+    }  
+    else {
+        /* this is TEST_MIE_ENABLED test */
+        /* check all harts woke up from WFI and serviced their software handler */
+        for (j=1; j<__METAL_DT_MAX_HARTS; j++) {
+            if ( (wfi_count[j] != NUM_WFI) || (msi_count[j] != NUM_WFI) ) {
+                /* test failed */
+                error = ERR_INTERRUPTS_ENABLED;
+                break;
+            }  
+        }  
+    }  
 
-	return(error);
+    return(error);
 }
 
 
@@ -232,47 +232,47 @@ error_t test_driver_hart_0 (test_t test) {
  *
  **********************************************************************/
 error_t test_driver_hart_last (test_t test) {
-	int i, j;
-	error_t error = ERR_NONE;
+    int i, j;
+    error_t error = ERR_NONE;
 
-	/* clear the synchronization flag */
-	harts_go = FALSE;
+    /* clear the synchronization flag */
+    harts_go = FALSE;
 
-	/* make doubly sure other harts are already at WFI */
-	wait(500);
+    /* make doubly sure other harts are already at WFI */
+    wait(500);
 
-	/* send each hart a software interrupt NUM_WFI times */
-	for (i=0; i<NUM_WFI; i++) {
-		for (j=0; j<__METAL_DT_MAX_HARTS-1; j++) {
-			set_software_interrupt(j);
-		}
-		/* give time to the test takers to respond and return to WFI */
-		wait(500);
-	}
+    /* send each hart a software interrupt NUM_WFI times */
+    for (i=0; i<NUM_WFI; i++) {
+        for (j=0; j<__METAL_DT_MAX_HARTS-1; j++) {
+            set_software_interrupt(j);
+        }
+        /* give time to the test takers to respond and return to WFI */
+        wait(500);
+    }
 
-	if (test == TEST_MIE_DISABLED) 	{
-		/* check that all harts ONLY woke up from WFI... NUM_WFI times */
-		for (j=0; j<__METAL_DT_MAX_HARTS-1; j++) {
-			if ( (wfi_count[j] != NUM_WFI) && (msi_count[j] == 0) ) {
-				/* test failed */
-				error = ERR_INTERRUPTS_DISABLED;
-				break;
-			}
-		}
-	}
-	else {
-		/* this is TEST_MIE_ENABLED test */
-		/* check all harts woke up from WFI and serviced their software handler */
-		for (j=0; j<__METAL_DT_MAX_HARTS-1; j++) {
-			if ( (wfi_count[j] != NUM_WFI) || (msi_count[j] != NUM_WFI) ) {
-				/* test failed */
-				error = ERR_INTERRUPTS_ENABLED;
-				break;
-			}
-		}
-	}
+    if (test == TEST_MIE_DISABLED) 	{
+        /* check that all harts ONLY woke up from WFI... NUM_WFI times */
+        for (j=0; j<__METAL_DT_MAX_HARTS-1; j++) {
+            if ( (wfi_count[j] != NUM_WFI) && (msi_count[j] == 0) ) {
+                /* test failed */
+                error = ERR_INTERRUPTS_DISABLED;
+                break;
+            }
+        }
+    }
+    else {
+        /* this is TEST_MIE_ENABLED test */
+        /* check all harts woke up from WFI and serviced their software handler */
+        for (j=0; j<__METAL_DT_MAX_HARTS-1; j++) {
+            if ( (wfi_count[j] != NUM_WFI) || (msi_count[j] != NUM_WFI) ) {
+                /* test failed */
+                error = ERR_INTERRUPTS_ENABLED;
+                break;
+            }
+        }
+    }
 
-	return (error);
+    return (error);
 }
 
 
@@ -291,19 +291,19 @@ error_t test_driver_hart_last (test_t test) {
  **********************************************************************/
 void test_taker (int hartid, test_t test) {
 
-	/* each hart clears its counters */
-	msi_count[hartid] = 0x0;
-	wfi_count[hartid] = 0x0;
+    /* each hart clears its counters */
+    msi_count[hartid] = 0x0;
+    wfi_count[hartid] = 0x0;
 
-	/* enter the WFI test loop */
-	while (wfi_count[hartid] < NUM_WFI) {
-		__asm__ volatile ("wfi");
-		wfi_count[hartid] += 1;
-		if (test == TEST_MIE_DISABLED) {
-			/* must manually clear the interrupt */
-			clear_software_interrupt(hartid);
-		}
-	}
+    /* enter the WFI test loop */
+    while (wfi_count[hartid] < NUM_WFI) {
+        __asm__ volatile ("wfi");
+        wfi_count[hartid] += 1;
+        if (test == TEST_MIE_DISABLED) {
+            /* must manually clear the interrupt */
+            clear_software_interrupt(hartid);
+        }
+    }
 
 }
 
@@ -353,12 +353,12 @@ void test_init (int hartid) {
 void __attribute__((interrupt)) software_handler (void) {
 
     /* increment this hart's software interrupt counter */
-	int hartid = metal_cpu_get_current_hartid();
-	msi_count[hartid] += 1;
+    int hartid = metal_cpu_get_current_hartid();
+    msi_count[hartid] += 1;
 
-	/* clear the interrupt... must be done manually */
-	int32_t *p = (int32_t*) (METAL_RISCV_CLINT0_0_BASE_ADDRESS + 4*hartid);
-	*p = 0x0;
+    /* clear the interrupt... must be done manually */
+    int32_t *p = (int32_t*) (METAL_RISCV_CLINT0_0_BASE_ADDRESS + 4*hartid);
+    *p = 0x0;
 
     /* ensure the clear is seen before we re-enter WFI */
     /* REQUIRED */
@@ -380,26 +380,26 @@ void __attribute__((interrupt)) software_handler (void) {
  **********************************************************************/
 void synchronize_harts (int hartid) {
 
-	/* harts check in... but only check out once ALL have checked in */
-	hart_checkin[hartid] = TRUE;
+    /* harts check in... but only check out once ALL have checked in */
+    hart_checkin[hartid] = TRUE;
 
-	/* hart_0 confirms all harts have checked in */
-	if (hartid == 0) {
-		while (harts_go == FALSE) {
-			if (hart_checkin_count() == __METAL_DT_MAX_HARTS) {
-				harts_go = TRUE;
-			}
-		}
-	}
-	else {
-		/* other harts wait for the go flag to be set by hart_0 */
-		while (harts_go == FALSE) {
-			wait(hartid);
-		}
-	}
+    /* hart_0 confirms all harts have checked in */
+    if (hartid == 0) {
+        while (harts_go == FALSE) {
+            if (hart_checkin_count() == __METAL_DT_MAX_HARTS) {
+                harts_go = TRUE;
+            }
+        }
+    }
+    else {
+        /* other harts wait for the go flag to be set by hart_0 */
+        while (harts_go == FALSE) {
+            wait(hartid);
+        }
+    }
 
-	/* clear the checkin for the next call */
-	hart_checkin[hartid] = FALSE;
+    /* clear the checkin for the next call */
+    hart_checkin[hartid] = FALSE;
 }
 
 
@@ -416,15 +416,15 @@ void synchronize_harts (int hartid) {
  **********************************************************************/
 int hart_checkin_count (void)
 {
-	int i, count=0;
+    int i, count=0;
 
-	for (i=0; i<__METAL_DT_MAX_HARTS; i++) {
-		if (hart_checkin[i] == TRUE) {
-			count +=1;
-		}
-	}
+    for (i=0; i<__METAL_DT_MAX_HARTS; i++) {
+        if (hart_checkin[i] == TRUE) {
+            count +=1;
+        }
+    }
 
-	return (count);
+    return (count);
 }
 
 
@@ -439,7 +439,7 @@ int hart_checkin_count (void)
 void secondary_main(void) {
 
     /* do nothing special... just deliver all harts to main() */
-	main();
+    main();
 }
 
 
@@ -454,7 +454,6 @@ void secondary_main(void) {
  **********************************************************************/
 __attribute__ ((optimize(0))) void wait (int count)
 {
-	while (count-- > 0);
+    while (count-- > 0);
 }
-
 

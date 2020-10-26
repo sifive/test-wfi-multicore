@@ -112,9 +112,9 @@ void set_software_interrupt (int hartid) {
 
 void clear_software_interrupt (int hartid)
 {
-	/* the software interrupt must be cleared manually */
-	int32_t *p = (int32_t*) (METAL_RISCV_CLINT0_0_BASE_ADDRESS + 4*hartid);
-	*p = 0x0;
+    /* the software interrupt must be cleared manually */
+    int32_t *p = (int32_t*) (METAL_RISCV_CLINT0_0_BASE_ADDRESS + 4*hartid);
+    *p = 0x0;
 
     /* ensure the clear is seen before we re-enter WFI */
     __asm__ volatile ("fence");

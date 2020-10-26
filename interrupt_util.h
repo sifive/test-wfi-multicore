@@ -18,9 +18,9 @@
 #define MCAUSE_CODE(cause)                  (cause & MCAUSE_CAUSE)
 
 /* Compile time options to determine which interrupt modules we have */
-#define CLINT_PRESENT                           (METAL_MAX_CLINT_INTERRUPTS > 0)
-#define CLIC_PRESENT                            (METAL_MAX_CLIC_INTERRUPTS > 0)
-#define PLIC_PRESENT                            (METAL_MAX_PLIC_INTERRUPTS > 0)
+#define CLINT_PRESENT                       (METAL_MAX_CLINT_INTERRUPTS > 0)
+#define CLIC_PRESENT                        (METAL_MAX_CLIC_INTERRUPTS > 0)
+#define PLIC_PRESENT                        (METAL_MAX_PLIC_INTERRUPTS > 0)
 
 #define DISABLE              0
 #define ENABLE               1
@@ -28,13 +28,13 @@
 
 /* Interrupt Specific defines - used for mtvec.mode field, which is bit[0] for
  * designs with CLINT, or [1:0] for designs with a CLIC */
-#define MTVEC_MODE_CLINT_DIRECT                 0x00
-#define MTVEC_MODE_CLINT_VECTORED               0x01
-#define MTVEC_MODE_CLIC_DIRECT                  0x02
-#define MTVEC_MODE_CLIC_VECTORED                0x03
+#define MTVEC_MODE_CLINT_DIRECT             0x00
+#define MTVEC_MODE_CLINT_VECTORED           0x01
+#define MTVEC_MODE_CLIC_DIRECT              0x02
+#define MTVEC_MODE_CLIC_VECTORED            0x03
 
-#define MACHINE_SOFTWARE_INTERRUPT_PENDING 	0x8
-#define MACHINE_TIMER_INTERRUPT_PENDING 	0x80
+#define MACHINE_SOFTWARE_INTERRUPT_PENDING  0x8
+#define MACHINE_TIMER_INTERRUPT_PENDING     0x80
 #define MACHINE_EXTERNAL_INTERRUPT_PENDING  0x800
 
 /* prototypes */
@@ -57,14 +57,6 @@ extern void interrupt_local_enable (int id);
 
 #define write_csr(reg, val) ({ \
   asm volatile ("csrw " #reg ", %0" :: "rK"(val)); })
-
-// #define MTIMECMP_ADDR                           0x02004000  /* standard base address for MTIMECMP - check your design */
-//#define write_dword(addr, data)                 ((*(uint64_t *)(addr)) = data)
-//#define read_dword(addr)                         (*(uint64_t *)(addr))
-//#define write_word(addr, data)                  ((*(uint32_t *)(addr)) = data)
-//#define read_word(addr)                         (*(uint32_t *)(addr))
-//#define write_byte(addr, data)                  ((*(uint8_t *)(addr)) = data)
-//#define read_byte(addr)                         (*(uint8_t *)(addr))
 
 /* Globals */
 void __attribute__((weak, interrupt)) timer_handler (void);
