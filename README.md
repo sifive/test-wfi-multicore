@@ -10,9 +10,9 @@ Note: The test requires that a Core-Local Interruptor (CLINT) exists in the desi
 ## Test Result
 The test result is 0 for success and non-zero for fail.  For test failures, the 
 possible results are:
- 1 if only the TEST_MIE_DISABLED failed
- 2 if only the TEST_MIE_ENABLED failed
- 3 if both tests failed
+ * 1 if only the TEST_MIE_DISABLED failed
+ * 2 if only the TEST_MIE_ENABLED failed
+ * 3 if both tests failed
 
 ## Test Deployment
 In a RTL environment, the files can be incorporated into your tarball workspace and 
